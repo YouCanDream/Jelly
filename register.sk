@@ -1,0 +1,4 @@
+on load:
+    define_menu("test", location(0, 0, 0), 5)
+    define_menu_text("test", "center", "this is center text", vector(0, 0, 0))
+    define_menu_text("test", "left", "&cthis is left text", vector(5, 0, 0))

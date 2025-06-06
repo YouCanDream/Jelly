@@ -1,0 +1,47 @@
+function define_menu(t: text, center: location, camera_distance: number):
+    set {-jelly::menu::%{_t}%} to {_t}
+    set {-jelly::menu::%{_t}%::center} to {_center}
+    set {-jelly::menu::%{_t}%::camera_location} to {_center} ~ vector(0, 0, -1 * {_camera_distance})
+
+#positive x is left, positive y is up, positive z is away from camera
+function define_menu_text(menu_id: text, text_id: text, text: text, position: vector, scale: vector = vector(1,1,1)):
+    set {-jelly::menu::%{_menu_id}%::text::%{_text_id}%} to {_text}
+    set {-jelly::menu::%{_menu_id}%::text::%{_text_id}%::position} to {_position}
+    set {-jelly::menu::%{_menu_id}%::text::%{_text_id}%::scale} to {_scale}
+
+function add_player_to_menu(p: player, menu_id: text):
+    locally suppress variable save warnings
+    remove_player_from_menu({_p})
+    set {_center} to {-jelly::menu::%{_menu_id}%::center}
+    set {_camera_location} to {-jelly::menu::%{_menu_id}%::camera_location}
+    teleport {_p} to {_camera_location}
+    loop indexes of {-jelly::menu::%{_menu_id}%::text::*}:
+        set {_text_id} to loop-value
+        set {_text} to {-jelly::menu::%{_menu_id}%::text::%{_text_id}%}
+        set {_position} to {-jelly::menu::%{_menu_id}%::text::%{_text_id}%::position}
+        set {_scale} to {-jelly::menu::%{_menu_id}%::text::%{_text_id}%::scale}
+        spawn text display at {_center} ~ {_position}:
+            set display text of entity to {_text}
+            set display scale of entity to {_scale}
+            rotate entity around y axis by 180
+            add entity to {-jelly::menu_entities::%{_p}%::*}
+    spawn text display at {_camera_location}:
+        set {_e} to entity
+        add {_e} to {-jelly::menu_entities::%{_p}%::*}
+    make {_p} ride {_e}
+    set boolean tag "menu_entity" of custom nbt of {_e} to true
+    while vehicle of {_p} is {_e}:
+        {_p}.setRotation(0, 0)
+        wait 1 tick
+    kill {_e}
+    remove_player_from_menu({_p})
+
+on dismount:
+    if boolean tag "menu_entity" of custom nbt of vehicle of event-entity is true:
+        cancel event
+
+function delete_menu_entities(p: player):
+    kill {-jelly::menu_entities::%{_p}%::*}
+
+function remove_player_from_menu(p: player):
+    delete_menu_entities({_p})
